@@ -4,7 +4,7 @@
 
 pkgbase=matlab
 pkgname=('python-matlabengine' 'matlab')
-pkgrel=1
+pkgrel=2
 # No need to modify the pkgver here, it will be determined by the script
 # in the offline installer.
 pkgver=9.12.0.1903524
@@ -16,26 +16,25 @@ makedepends=('findutils' 'gendesk' 'icoutils' 'python')
 # Some of the dependencies probably are not needed.
 # If you play around with them and find which one can be removed,
 # please contact the maintainers.
+# For a list of possible dependencies, see here:
+# https://hub.docker.com/r/mathworks/matlab-deps/dockerfile.
 depends=(
-  'ca-certificates'
-  'lsb-release'
   'alsa-lib'
   'atk'
+  'ca-certificates'
+  'cairo'
+  'fontconfig'
+  'gdk-pixbuf2'
+  'glib2'
+  'gst-plugins-base'
+  'gstreamer'
+  'gtk3'
+  'krb5'
   'libcap'
   'libcups'
   'libdbus'
-  'fontconfig'
+  'libdrm'
   'libgcrypt'
-  'gdk-pixbuf2'
-  'gst-plugins-base'
-  'gstreamer'
-  'gtk2'
-  'krb5'
-  'nspr'
-  'nss'
-  'pam'
-  'pango'
-  'cairo'
   'libselinux'
   'libsm'
   'libsndfile'
@@ -57,17 +56,27 @@ depends=(
   'libxt'
   'libxtst'
   'libxxf86vm'
+  'lsb-release'
+  'make'
+  'mesa'
+  'net-tools'
+  'nspr'
+  'nss'
+  'pam'
+  'pango'
   'procps-ng'
-  'xorg-server-xvfb'
-  'x11vnc'
   'sudo'
+  'unzip'
+  'util-linux-libs'
+  'wget'
+  'x11vnc'
+  'xorg-server-xvfb'
   'zlib')
 # We should check even these ones.
 # GCC: https://www.mathworks.com/support/requirements/supported-compilers.html
 depends+=(
   'gconf'
   'glu'
-  'gstreamer'
   'libunwind'
   'libxp'
   'libxpm'
@@ -79,7 +88,7 @@ depends+=(
   'xerces-c')
 provides=('matlab-bin' 'matlab' 'python-matlabengine')
 source=(
-  'matlab.tar.zst'
+  'matlab.tar'
   'matlab.fik'
   'matlab.lic'
 )
@@ -123,8 +132,7 @@ prepare() {
     done
   fi
 
-  msg2 "Generating the desktop file..."
-
+  msg2 "Generating desktop file..."
   # Add a fix for Intel GPUs with mesa 20, see:
   # https://wiki.archlinux.org/index.php/MATLAB#OpenGL_acceleration
   # https://wiki.archlinux.org/index.php/Intel_graphics#Old_OpenGL_Driver_(i965)
@@ -140,7 +148,7 @@ prepare() {
 }
 
 build() {
-  msg2 "Installing with the original installer..."
+  msg2 "Running the original installer..."
   # Using the installer with the -inputFile parameter will automatically
   # cause the installation to be non-interactive
   "${srcdir}/${pkgbase}/install" -inputFile "${srcdir}/${pkgbase}/installer_input.txt"
@@ -212,7 +220,7 @@ package_python-matlabengine() {
 }
 
 package_matlab() {
-  # Compilers should be optional depends
+  # Compilers should be optional dependencies.
   msg2 "Determining compiler versions..."
   if [ "$(vercmp ${pkgver} "9.10" )" -ge "0" ]; then
     optdepends+=('gcc9: For MEX support'
@@ -284,6 +292,10 @@ package_matlab() {
     "${pkgdir}/usr/share/applications/${pkgbase}.desktop"
   install -Dm644 "${srcdir}/${pkgbase}/bin/glnxa64/cef_resources/matlab_icon.png" "$pkgdir/usr/share/pixmaps/$pkgbase.png"
 
+  msg2 "Patching FreeType..."
+  mv "${pkgdir}/${instdir}/bin/glnxa64/libfreetype.so.6" \
+     "${pkgdir}/${instdir}/bin/glnxa64/libfreetype.so.6.MATLAB"
+
   msg2 "Linking mex options to ancient libraries..."
   sysdir="bin/glnxa64/mexopts"
   mkdir -p "${pkgdir}/${instdir}/backup/${sysdir}"
@@ -319,5 +331,4 @@ package_matlab() {
   # The GCC dependency should be determined at runtime.
   sed -i "1s#^#if pacman -Q "${gfortranlib}' > /dev/null 2>&1 ; then \n export GCCVERSION=$(pacman -Q '${gfortranlib}" | awk '{print \$2}' | cut -d- -f1) \nfi\n\n#" "${pkgdir}/${instdir}/bin/matlab"
   sed -i "1s/^/# Check the optional GCC dependency.\n/" "${pkgdir}/${instdir}/bin/matlab"
-  sed -i 's|LD_LIBRARY_PATH="`eval echo $LD_LIBRARY_PATH`"|if [ -n "${GCCVERSION}" ]; then \n LD_LIBRARY_PATH="`eval echo $LD_LIBRARY_PATH`:/usr/lib/gcc/x86_64-pc-linux-gnu/${GCCVERSION}"; \n else \n LD_LIBRARY_PATH="`eval echo $LD_LIBRARY_PATH`" \n fi \n|g' "${pkgdir}/${instdir}/bin/matlab"
 }
