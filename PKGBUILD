@@ -31,19 +31,16 @@ depends=(
   'libdbus'
   'libnet'
   'libraw'
-  'libsm'
   'libsndfile'
   'libuv'
   'libxcrypt-compat'
   'libxss'
   'make'
-  'mesa'
   'minizip'
   'nss'
   'qt5-xmlpatterns'
   'tbb'
-  'unixodbc'
-  'zlib')
+  'unixodbc')
 # We should check even these ones.
 # GCC: https://www.mathworks.com/support/requirements/supported-compilers.html
 optdepends=(
@@ -56,7 +53,6 @@ optdepends=(
 )
 depends+=(
   'glu'
-  'libunwind'
   'portaudio'
   'qt5-svg'
   'qt5-webkit'
