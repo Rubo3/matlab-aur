@@ -127,5 +127,4 @@ package() {
   install -Dm644 matlab.sysusers "$pkgdir/usr/lib/sysusers.d/matlab.conf"
   chown -R root:2022 "$pkgdir/$_instdir"
   chmod -R g+w       "$pkgdir/$_instdir"
-  
 }
