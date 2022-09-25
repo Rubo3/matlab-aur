@@ -1,0 +1,8 @@
+post_install() {
+    echo "==> In order to gain write permission to the MATLAB directory" \
+        " (e.g. to install other toolboxes), add yourself to the 'matlab' group."
+}
+
+post_upgrade() {
+    post_install
+}
